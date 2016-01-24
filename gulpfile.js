@@ -6,15 +6,16 @@ var gulp = require('gulp'),
   autoPrefixer = require('gulp-autoprefixer'),
   plumber = require('gulp-plumber'),
   sourcemaps = require('gulp-sourcemaps'),
+  sass = require('gulp-sass'),
 //File paths
   DIST_PATH = 'public/dist',
   SCRIPTS_PATH = 'public/scripts/**/*.js',
-  CSS_PATH = 'public/css/**/*.css';
+  SASS_PATH = 'public/scss/**/*.scss';
 
 // Styles
 gulp.task('styles', function () {
     console.log('starting styles task');
-    return gulp.src(['public/css/reset.css', CSS_PATH])
+    return gulp.src('public/scss/styles.scss')
       .pipe(plumber(function (err) {
           console.log('Styles Task Error');
           console.log(err);
@@ -22,8 +23,9 @@ gulp.task('styles', function () {
       }))
       .pipe(sourcemaps.init())
       .pipe(autoPrefixer())
-      .pipe(concat('styles.css'))
-      .pipe(minifyCss())
+      .pipe(sass({
+          outputStyle: 'compressed'
+      }))
       .pipe(sourcemaps.write())
       .pipe(gulp.dest(DIST_PATH))
       .pipe(livereload());
@@ -49,7 +51,7 @@ gulp.task('watch', function () {
     require('./server.js');
     livereload.listen();
     gulp.watch(SCRIPTS_PATH, ['scripts']);
-    gulp.watch(CSS_PATH, ['styles']);
+    gulp.watch(SASS_PATH, ['styles']);
 });
 
 gulp.task('default', function () {
