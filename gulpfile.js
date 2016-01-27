@@ -8,17 +8,28 @@ var gulp = require('gulp'),
   sourcemaps = require('gulp-sourcemaps'),
   sass = require('gulp-sass'),
   babel = require('gulp-babel'),
-//File paths
-  DIST_PATH = 'public/dist',
-  SCRIPTS_PATH = 'public/scripts/**/*.js',
-  SASS_PATH = 'public/scss/**/*.scss',
-  TEMPLATES_PATH = 'templates/**/*.hbs',
+  del = require('del'),
+  zip = require('gulp-zip'),
 
 // Handlebars plugins
   handlebars = require('gulp-handlebars'),
   handlebarsLib = require('handlebars'),
   declare = require('gulp-declare'),
-  wrap = require('gulp-wrap');
+  wrap = require('gulp-wrap'),
+
+  // images plugins
+  jpegoptim = require('imagemin-jpegoptim'),
+  pngquant = require('imagemin-pngquant'),
+  optipng = require('imagemin-optipng'),
+  svgo = require('imagemin-svgo'),
+  size = require('gulp-size'),
+
+//File paths
+  DIST_PATH = 'public/dist',
+  SCRIPTS_PATH = 'public/scripts/**/*.js',
+  SASS_PATH = 'public/scss/**/*.scss',
+  TEMPLATES_PATH = 'templates/**/*.hbs',
+  IMAGES_PATH = 'public/images/**/*.{png,jpg,jpeg,gif,svg}';
 
 // Styles
 gulp.task('styles', function () {
@@ -62,6 +73,25 @@ gulp.task('scripts', function () {
 // Images
 gulp.task('images', function () {
     console.log('starting images task');
+
+    return gulp.src(IMAGES_PATH)
+      .pipe(size({
+          title: 'Uncompressed images'
+      }))
+      .pipe(pngquant({
+          quality: '65-80'
+      })())
+      .pipe(optipng({
+          optimizationLevel: 3
+      })())
+      .pipe(jpegoptim({
+          max: 70
+      })())
+      .pipe(svgo()())
+      .pipe(size({
+          title: 'Compressed images'
+      }))
+      .pipe(gulp.dest(DIST_PATH + '/images'));
 });
 
 // Templates
@@ -90,6 +120,21 @@ gulp.task('watch', ['default'], function () {
     gulp.watch(TEMPLATES_PATH, ['templates']);
 });
 
-gulp.task('default', ['images', 'templates', 'styles', 'scripts'], function () {
+// delete dist folder
+gulp.task('clean', function() {
+    console.log('remove dist folder launched');
+    return del.sync([
+      DIST_PATH
+    ]);
+});
+
+//export zip
+gulp.task('export', ['default'], function() {
+   return gulp.src('public/**/*')
+      .pipe(zip('website.zip'))
+      .pipe(gulp.dest('./'));
+});
+
+gulp.task('default', ['clean', 'images', 'templates', 'styles', 'scripts'], function () {
     console.log('starting default task');
 });
